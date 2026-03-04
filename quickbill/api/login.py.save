@@ -22,8 +22,7 @@ def get_login_details(username_or_email=None, password=None, company=None):
 		auth_user = frappe.session.user
 		frappe.set_user(auth_user)
 
-		# Token (create if missing)
-		user_token = _get_or_create_user_api_token(auth_user)
+
 
 		# ---- your original logic (slightly refactored to use auth_user) ----
 		user_doc = frappe.get_doc("User", auth_user)
@@ -114,7 +113,6 @@ def _get_or_create_user_api_token(user: str) -> str:
 		api_key, api_secret = frappe.db.get_value("User", user, ["api_key", "api_secret"])
 
 	return f"token:{api_key}:{api_secret}"
-
 
 def _get_user_companies(user):
 	"""Get list of companies the user has access to."""
