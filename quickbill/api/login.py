@@ -94,27 +94,32 @@ def _get_or_create_user_api_token(user: str) -> str:
 	"""
 	Returns token string in format: token:apikey:secret
 	Creates api_key/api_secret if missing.
+	NOTE: api_secret is a Password field -> must read via get_password()
 	"""
-	api_key, api_secret = frappe.db.get_value("User", user, ["api_key", "api_secret"]) or (None, None)
+	user_doc = frappe.get_doc("User", user)
 
-	if not api_key or not api_secret:
-		# Generate and save
-		user_doc = frappe.get_doc("User", user)
+	# Ensure api_key exists
+	if not user_doc.api_key:
+		user_doc.api_key = frappe.generate_hash(length=15)
 
-		if not user_doc.api_key:
-			user_doc.api_key = frappe.generate_hash(length=15)
+	# Read api_secret properly (unmasked)
+	secret = None
+	try:
+		secret = user_doc.get_password("api_secret")
+	except Exception:
+		secret = None
 
-		if not user_doc.api_secret:
-			# api_secret is stored encrypted; use set_password
-			user_doc.set_password("api_secret", frappe.generate_hash(length=32))
+	# Ensure api_secret exists
+	if not secret:
+		new_secret = frappe.generate_hash(length=32)
+		user_doc.set_password("api_secret", new_secret)
+		secret = new_secret
 
-		user_doc.save(ignore_permissions=True)
-		frappe.db.commit()
+	# Save only if we changed anything
+	user_doc.save(ignore_permissions=True)
+	frappe.db.commit()
 
-		api_key, api_secret = frappe.db.get_value("User", user, ["api_key", "api_secret"])
-
-	return f"token:{api_key}:{api_secret}"
-
+	return f"token:{user_doc.api_key}:{secret}"
 
 def _get_user_companies(user):
 	"""Get list of companies the user has access to."""
