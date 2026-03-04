@@ -50,7 +50,7 @@ def get_invoices(company=None, customer=None, sales_person=None, status=None, li
 		"Sales Invoice",
 		filters=filters,
 		fields=[
-			"name", "customer", "customer_name", "posting_date", "due_date",
+			"name", "customer", "customer_name", "company", "posting_date", "due_date",
 			"grand_total", "outstanding_amount", "status",
 		],
 		limit_page_length=int(limit_page_length),
@@ -78,7 +78,7 @@ def _get_invoices_by_sales_person(sales_person, filters, limit, offset):
 
 	invoices = frappe.db.sql(
 		f"""
-		SELECT DISTINCT si.name, si.customer, si.customer_name, si.posting_date,
+		SELECT DISTINCT si.name, si.customer, si.customer_name, si.company, si.posting_date,
 			si.due_date, si.grand_total, si.outstanding_amount, si.status
 		FROM `tabSales Invoice` si
 		JOIN `tabSales Team` st ON st.parent = si.name AND st.parenttype = 'Sales Invoice'
@@ -112,6 +112,7 @@ def _format_invoice(inv):
 
 	return {
 		"customer": inv.customer_name or inv.customer,
+		"company": inv.get("company") or "",
 		"items": items,
 		"sales_person": sales_person,
 		"payments": payments,
@@ -267,6 +268,7 @@ def create_invoice(data):
 
 	return {
 		"customer": invoice.customer_name or invoice.customer,
+		"company": invoice.company or "",
 		"items": _get_invoice_items(invoice.name),
 		"sales_person": data.get("sales_person", ""),
 		"payments": [{"name": p.mode_of_payment, "default": False} for p in invoice.payments] if invoice.payments else [],
