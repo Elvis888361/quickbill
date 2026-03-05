@@ -119,7 +119,7 @@ def _get_or_create_user_api_token(user: str) -> str:
 	user_doc.save(ignore_permissions=True)
 	frappe.db.commit()
 
-	return f"token:{user_doc.api_key}:{secret}"
+	return f"token {user_doc.api_key}:{secret}"
 
 def _get_user_companies(user):
 	"""Get list of companies the user has access to."""
