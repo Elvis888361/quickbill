@@ -58,7 +58,7 @@ def _get_selling_price(item_code, company=None):
 		"selling": 1,
 	}
 	if company:
-		filters["company"] = company
+		#filters["company"] = company
 
 	price = frappe.get_all(
 		"Item Price",
